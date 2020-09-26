@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.PropertyEditorRegistrar;
 import org.springframework.beans.factory.config.CustomEditorConfigurer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -77,8 +79,8 @@ public class SpringContextConfiguration extends WebMvcConfigurerAdapter {
 		propertyEditors.add(new EditorRegestrar());
 		return propertyEditors.toArray(new PropertyEditorRegistrar[propertyEditors.size()]);
 	}
-	@Bean 
-    public RequestDataValueProcessor requestDataValueProcessor() {
-        return new CsrfRequestDataValueProcessor(); 
-    } 
+	@Bean
+	ServletWebServerFactory servletWebServerFactory(){
+		return new TomcatServletWebServerFactory();
+	}
 }

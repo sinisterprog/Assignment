@@ -4,15 +4,16 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
+
 import org.springframework.context.annotation.Configuration;
-import org.springframework.orm.hibernate4.HibernateTransactionManager;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.hibernate.cfg.Environment;
 
 import com.mikes.dao.impl.EngineerDaoImpl;
 import com.mikes.dao.impl.ExperienceDaoImpl;
@@ -27,20 +28,29 @@ import com.mikes.model.Qualification;
 
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(basePackages = "com.mikes")
 public class HibernateContextConfiguration {
-	@Autowired
+//	@Autowired
 	@Bean(name = "sessionFactory")
 	public SessionFactory getSessionFactory(DataSource dataSource) {
-		LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(
-				dataSource);
-		sessionBuilder.addProperties(getHibernateProperties());
 
-		sessionBuilder.addAnnotatedClasses(Engineer.class);
-		sessionBuilder.addAnnotatedClasses(Experience.class);
-		sessionBuilder.addAnnotatedClasses(Qualification.class);
 
-		return sessionBuilder.buildSessionFactory();
+
+		org.hibernate.cfg.Configuration configuration = new org.hibernate.cfg.Configuration();
+		// Hibernate settings equivalent to hibernate.cfg.xml's properties
+		Properties settings = new Properties();
+		settings.put(Environment.DRIVER, "org.h2.Driver");
+		settings.put(Environment.URL, "jdbc:h2:mem:test");
+		settings.put(Environment.USER, "sa");
+
+		configuration.setProperties(settings);
+		configuration.addAnnotatedClass(Engineer.class);
+		configuration.addAnnotatedClass(Experience.class);
+		configuration.addAnnotatedClass(Qualification.class);
+
+		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySettings(configuration.getProperties()).build();
+
+		return configuration.buildSessionFactory(serviceRegistry);
 	}
 
 	private Properties getHibernateProperties() {
@@ -56,23 +66,12 @@ public class HibernateContextConfiguration {
 	 */
 	@Bean(name = "dataSource")
 	public DataSource getDataSource() {
-		BasicDataSource dataSource = new BasicDataSource();
-		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-		dataSource.setUrl("jdbc:mysql://localhost:3306/intersoftkk");
-		dataSource.setUsername("root");
-		dataSource.setPassword("admin");
-
-		return dataSource;
-	}
-
-	@Autowired
-	@Bean(name = "transactionManager")
-	public HibernateTransactionManager getTransactionManager(
-			SessionFactory sessionFactory) {
-		HibernateTransactionManager transactionManager = new HibernateTransactionManager(
-				sessionFactory);
-
-		return transactionManager;
+		DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
+		dataSourceBuilder.driverClassName("org.h2.Driver");
+		dataSourceBuilder.url("jdbc:h2:mem:test");
+		dataSourceBuilder.username("SA");
+		dataSourceBuilder.password("");
+		return dataSourceBuilder.build();
 	}
 
 	@Autowired
